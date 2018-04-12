@@ -1,0 +1,43 @@
+	In liniile ce urmeaza voi prezenta implementarea aleasa pentru realizarea
+protocolului de comunicatie mini-Kermit.
+	In vederea realizarii acestui protocol, am implementat fisierele ksender.c
+si kreceiver, precum si cateva functii ajutatoare in fisierul lib.h.
+	
+	In ksender.c am realizat etapele necesare initializarii conexiunii si 
+trimiterii pe rand a fisierelor specificate in argv[].
+	In primul rand, initializes un mesaj de tip send_init si il trimit catre
+sender. Dupa care, intr-un while, astept raspuns de la receiver, iar in cazul
+in care se realizeaza 3 timeout-uri consecutive se inchide conexiunea. Daca 
+se primeste nak pentru send_init se retrmite mesajul, iar daca se primeste 
+nak se continua executia programului (se iese din while). Urmeaza un for 
+in care iteram prin elementele din argv[]. La fiecare iteratie initializez
+un mesaj de tip file_header si il trimit. Dupa care, in cadrul unui while
+repet procedura utilizata pentru trimiterea send_init, numai ca de data 
+aceasta in caz de timeout retrimit mesajul, iar daca s-a primit ack verific
+si numarul de secventa, iar daca nu este corespunzator se ignora. Daca s-a
+trecut de aceste conditii, verific tipul ultimului mesaj trimis si 
+initializez un mesaj corespunzator, pe care il si trimit. De exemplu,
+daca mesajul trimis precedent a fost de tip file_header, citesc din
+fisier date si initializez un mesaj de tip data. Dupa trimiterea tuturor
+fisierelor, trimit un mesaj de tip end_of_transaction printr-o procedura
+asemanatoare trimiterii send_init-ului.
+	
+	In kreceiver.c am realizat etapele necesare initializarii conexiunii
+si confirmarii mesajelor trimise din sender.
+	In primul rand, astept un mesaj de tip send_init, realizand o procedura
+asemanatoare trimiterii send_init-ului din ksender.c. Restul de mesaje le
+astept si le primesc in alt while in care daca se realizeaza timeout se
+retrimite ultimul ack/nak. Daca nu se realizeaza timeout, verific daca
+mesajul primit este corupt. Daca mesajul este corect, verific numarul de
+secventa, iar daca este corespunzator trimit ack si realizez operatiunile
+necesare. De exemplu, daca s-a primit un mesaj de tip file_header deschid 
+fisierul in care trebuie scrise datele.
+	
+	In lib.h am definit structura pachetului, care contine soh, len, seq si
+type, fiecare pe cate un char, un pointer de tip unsigned char pt data,
+un short pt check si un char pt mark. Aloc dinamic memoria necesarii 
+sectiunii data din fiecare pachet in functie de cantitatea de informatia
+transmisa. De asemenea, am creat o functie care realizeaza mesajul, copiaza
+informatia din structura kPackage si o insereaza in mesaj. Totodata, 
+am creat si functii de afisare a mesajelor, respectiv a informatiei din
+pachete.
